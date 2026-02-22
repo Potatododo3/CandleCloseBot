@@ -214,7 +214,7 @@ async def cmd_addcoin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if len(args) != 2:
         await update.message.reply_text(
-            "❌ <b>Usage:</b> /addcoin &lt;coin_id&gt; &lt;BINANCE_SYMBOL&gt;\n\n"
+            "❌ <b>Usage:</b> /addcoin &lt;coin_id&gt; &lt;BYBIT_SYMBOL&gt;\n\n"
             "<b>Example:</b> /addcoin ondo ONDOUSDT\n\n"
             "coin_id is how you'll refer to it in /watch.\n"
             "BINANCE_SYMBOL must be a valid Bybit USDT perpetual.",
@@ -224,12 +224,6 @@ async def cmd_addcoin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     coin_id = args[0].lower()
     symbol = args[1].upper()
-
-    if not symbol.endswith("USDT"):
-        await update.message.reply_text(
-            f"❌ Symbol must end in USDT (e.g. <code>ONDOUSDT</code>).", parse_mode="HTML"
-        )
-        return
 
     await update.message.reply_text(
         f"⏳ Validating <code>{symbol}</code> on Bybit perpetuals...", parse_mode="HTML"

@@ -37,8 +37,9 @@ def coin_to_symbol(coin: str) -> Optional[str]:
 
     upper = coin.upper()
 
-    # Direct symbol passthrough (e.g. BTCUSDT or btcusdt)
-    if upper.endswith("USDT") and len(upper) > 4:
+    # Direct symbol passthrough — if it looks like a full Bybit symbol (>=6 chars,
+    # ends in USDT or PERP or USDC), return as-is without DB lookup
+    if len(upper) >= 6 and (upper.endswith("USDT") or upper.endswith("USDC") or upper.endswith("PERP")):
         return upper
 
     # DB lookup
