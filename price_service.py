@@ -181,18 +181,19 @@ def validate_symbol(symbol: str) -> bool:
     }
     try:
         resp = requests.get(url, params=params, timeout=10)
+        logger.info(f"validate_symbol {symbol}: HTTP {resp.status_code}")
         if resp.status_code != 200:
+            logger.error(f"validate_symbol {symbol}: bad status {resp.status_code}")
             return False
         data = resp.json()
+        logger.info(f"validate_symbol {symbol}: retCode={data.get('retCode')} retMsg={data.get('retMsg')} list={data.get('result', {}).get('list')}")
         if data.get("retCode") != 0:
             return False
         instruments = data.get("result", {}).get("list", [])
         if not instruments:
             return False
-        # Also check it's actively trading
         status = instruments[0].get("status", "")
-        if status != "Trading":
-            logger.warning(f"{symbol} exists but status is '{status}', not 'Trading'")
+        logger.info(f"validate_symbol {symbol}: status={status}")
         return True
     except requests.RequestException as e:
         logger.error(f"validate_symbol error for {symbol}: {e}")
