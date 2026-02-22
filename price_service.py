@@ -170,13 +170,14 @@ def get_latest_closed_candle(coin: str, timeframe: str, candle_close_ts: int) ->
 
 
 def validate_symbol(symbol: str) -> bool:
-    """Check a raw Bybit symbol exists by fetching one kline."""
-    url = f"{BYBIT_BASE_URL}/v5/market/kline"
+    """
+    Check a raw Bybit symbol exists using the instruments-info endpoint.
+    More reliable than klines which can return empty for newly listed coins.
+    """
+    url = f"{BYBIT_BASE_URL}/v5/market/instruments-info"
     params = {
         "category": BYBIT_CATEGORY,
         "symbol":   symbol,
-        "interval": "D",
-        "limit":    1,
     }
     try:
         resp = requests.get(url, params=params, timeout=10)
@@ -185,7 +186,14 @@ def validate_symbol(symbol: str) -> bool:
         data = resp.json()
         if data.get("retCode") != 0:
             return False
-        return bool(data.get("result", {}).get("list"))
+        instruments = data.get("result", {}).get("list", [])
+        if not instruments:
+            return False
+        # Also check it's actively trading
+        status = instruments[0].get("status", "")
+        if status != "Trading":
+            logger.warning(f"{symbol} exists but status is '{status}', not 'Trading'")
+        return True
     except requests.RequestException as e:
         logger.error(f"validate_symbol error for {symbol}: {e}")
         return False
