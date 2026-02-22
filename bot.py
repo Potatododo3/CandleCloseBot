@@ -104,13 +104,13 @@ async def cmd_watch(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Resolve symbol before validating so we can show it
     symbol = price_service.coin_to_symbol(coin)
     await update.message.reply_text(
-        f"⏳ Validating <code>{coin}</code> → <code>{symbol}</code> on Binance...",
+        f"⏳ Validating <code>{coin}</code> → <code>{symbol}</code> on Bybit perpetuals...",
         parse_mode="HTML",
     )
 
     if not price_service.validate_coin(coin):
         await update.message.reply_text(
-            f"❌ <code>{symbol}</code> not found on Binance.\n\n"
+            f"❌ <code>{symbol}</code> not found on Bybit perpetuals.\n\n"
             f"• Use /coins to see supported coins\n"
             f"• Use /addcoin to add a new one",
             parse_mode="HTML",
@@ -217,7 +217,7 @@ async def cmd_addcoin(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "❌ <b>Usage:</b> /addcoin &lt;coin_id&gt; &lt;BINANCE_SYMBOL&gt;\n\n"
             "<b>Example:</b> /addcoin ondo ONDOUSDT\n\n"
             "coin_id is how you'll refer to it in /watch.\n"
-            "BINANCE_SYMBOL must be a valid Binance USDT pair.",
+            "BINANCE_SYMBOL must be a valid Bybit USDT perpetual.",
             parse_mode="HTML",
         )
         return
@@ -232,13 +232,13 @@ async def cmd_addcoin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     await update.message.reply_text(
-        f"⏳ Validating <code>{symbol}</code> on Binance...", parse_mode="HTML"
+        f"⏳ Validating <code>{symbol}</code> on Bybit perpetuals...", parse_mode="HTML"
     )
 
     if not price_service.validate_symbol(symbol):
         await update.message.reply_text(
-            f"❌ <code>{symbol}</code> not found on Binance.\n"
-            f"Check the symbol at binance.com and try again.",
+            f"❌ <code>{symbol}</code> not found on Bybit perpetuals.\n"
+            f"Check the symbol at bybit.com and try again.",
             parse_mode="HTML",
         )
         return
@@ -288,7 +288,7 @@ async def cmd_removecoin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🤖 <b>Crypto Candle Alert Bot</b>\n"
-        "Powered by Binance — no API key required.\n\n"
+        "Powered by Bybit perpetual futures — no API key required.\n\n"
 
         "<b>Alert commands</b>\n"
         "/watch <code>coin timeframe above|below price</code>\n"
