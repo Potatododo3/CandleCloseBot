@@ -296,18 +296,27 @@ async def cmd_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="HTML",
     )
 
-    matches = price_service.search_symbols(query)
+    # Strip common suffixes so searching "TAUSDT" also finds "TA"-based symbols
+    clean_query = query.upper()
+    for suffix in ("USDT", "USDC", "PERP", ".P", "USD"):
+        if clean_query.endswith(suffix):
+            clean_query = clean_query[:-len(suffix)]
+            break
+
+    matches = price_service.search_symbols(clean_query)
     if not matches:
         await update.message.reply_text(
-            f"❌ No perpetual contracts found matching <code>{query.upper()}</code>.",
+            f"❌ No perpetual contracts found matching <code>{clean_query}</code> on Bybit.\n\n"
+            f"The coin may not have a perpetual futures contract yet.",
             parse_mode="HTML",
         )
         return
 
-    lines = [f"🔍 <b>Results for '{query.upper()}'</b>\n"]
+    lines = [f"🔍 <b>Results for '{clean_query}'</b>\n"]
     for symbol in matches:
         lines.append(f"<code>{symbol}</code>")
-    lines.append(f"\nTo add: /addcoin &lt;name&gt; {matches[0]}")
+    lines.append(f"\nTo add one:\n/addcoin &lt;your_name&gt; &lt;symbol&gt;")
+    lines.append(f"Example: /addcoin {clean_query.lower()} {matches[0]}")
 
     await update.message.reply_text("\n".join(lines), parse_mode="HTML")
 

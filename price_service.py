@@ -37,10 +37,10 @@ def coin_to_symbol(coin: str) -> Optional[str]:
 
     upper = coin.upper()
 
-    # Direct symbol passthrough — if it looks like a full Bybit symbol (>=6 chars,
-    # ends in USDT or PERP or USDC), return as-is without DB lookup
-    if len(upper) >= 6 and (upper.endswith("USDT") or upper.endswith("USDC") or upper.endswith("PERP")):
-        return upper
+    # Direct symbol passthrough — if it ends in a known quote suffix, treat as full symbol
+    for suffix in ("USDT", "USDC", "PERP", "USD"):
+        if upper.endswith(suffix) and len(upper) > len(suffix):
+            return upper
 
     # DB lookup
     symbol = database.get_coin_symbol(coin)
@@ -218,6 +218,8 @@ def search_symbols(query: str) -> list[str]:
             i["symbol"] for i in instruments
             if query_upper in i["symbol"]
         ]
+        # Sort: exact prefix matches first, then others
+        matches.sort(key=lambda s: (not s.startswith(query_upper), s))
         return matches[:10]
     except requests.RequestException as e:
         logger.error(f"search_symbols error: {e}")
