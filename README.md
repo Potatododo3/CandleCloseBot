@@ -1,6 +1,6 @@
 # Crypto Candle Alert Bot
 
-Telegram bot that monitors CoinGecko candle **closes** and sends alerts when the close price crosses a target.
+Telegram bot that monitors Binance candle **closes** and sends alerts when the close price crosses a target.
 
 ## Features
 - Monitors candle close prices (not intra-candle)
