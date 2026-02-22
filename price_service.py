@@ -197,3 +197,28 @@ def validate_coin(coin: str) -> bool:
     if not symbol:
         return False
     return validate_symbol(symbol)
+
+
+def search_symbols(query: str) -> list[str]:
+    """
+    Search Bybit linear perpetual instruments for symbols matching a query string.
+    Returns a list of matching symbol names (up to 10).
+    """
+    url = f"{BYBIT_BASE_URL}/v5/market/instruments-info"
+    params = {"category": BYBIT_CATEGORY, "limit": 1000}
+    try:
+        resp = requests.get(url, params=params, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("retCode") != 0:
+            return []
+        instruments = data.get("result", {}).get("list", [])
+        query_upper = query.upper()
+        matches = [
+            i["symbol"] for i in instruments
+            if query_upper in i["symbol"]
+        ]
+        return matches[:10]
+    except requests.RequestException as e:
+        logger.error(f"search_symbols error: {e}")
+        return []

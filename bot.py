@@ -274,6 +274,44 @@ async def cmd_removecoin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ <code>{coin_id}</code> not found in registry.", parse_mode="HTML")
 
 
+
+# ---------------------------------------------------------------------------
+# /search
+# ---------------------------------------------------------------------------
+
+@authorized_only
+async def cmd_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 1:
+        await update.message.reply_text(
+            "❌ <b>Usage:</b> /search &lt;query&gt;\n\n"
+            "<b>Example:</b> /search TAU\n\n"
+            "Searches Bybit perpetuals for matching symbols.",
+            parse_mode="HTML",
+        )
+        return
+
+    query = context.args[0]
+    await update.message.reply_text(
+        f"🔍 Searching Bybit perpetuals for <code>{query.upper()}</code>...",
+        parse_mode="HTML",
+    )
+
+    matches = price_service.search_symbols(query)
+    if not matches:
+        await update.message.reply_text(
+            f"❌ No perpetual contracts found matching <code>{query.upper()}</code>.",
+            parse_mode="HTML",
+        )
+        return
+
+    lines = [f"🔍 <b>Results for '{query.upper()}'</b>\n"]
+    for symbol in matches:
+        lines.append(f"<code>{symbol}</code>")
+    lines.append(f"\nTo add: /addcoin &lt;name&gt; {matches[0]}")
+
+    await update.message.reply_text("\n".join(lines), parse_mode="HTML")
+
+
 # ---------------------------------------------------------------------------
 # /help
 # ---------------------------------------------------------------------------
@@ -298,6 +336,8 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/addcoin <code>coin_id SYMBOL</code>\n"
         "  Add a new coin to the registry\n"
         "/removecoin <code>coin_id</code>\n"
+        "/search <code>query</code>\n"
+        "  Find exact Bybit symbol names\n"
         "  Remove a coin from the registry\n\n"
 
         "<b>Timeframes</b>\n"
@@ -338,6 +378,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("coins",       cmd_coins))
     app.add_handler(CommandHandler("addcoin",     cmd_addcoin))
     app.add_handler(CommandHandler("removecoin",  cmd_removecoin))
+    app.add_handler(CommandHandler("search",      cmd_search))
     app.add_handler(CommandHandler("help",        cmd_help))
     app.add_handler(CommandHandler("start",       cmd_help))
     return app
