@@ -64,47 +64,6 @@ Then press `Win + R` → type `shell:startup` → drag a shortcut to `start.bat`
 
 ---
 
-## Deploy to Render (Free Tier)
-
-### Step 1 — Push code to GitHub
-Install Git from https://git-scm.com/download/win, then:
-```
-git init
-git add .
-git commit -m "initial commit"
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-git branch -M main
-git push -u origin main
-```
-
-### Step 2 — Create Render account
-Sign up at https://render.com using GitHub.
-
-### Step 3 — Create a Background Worker
-- Dashboard → New → **Background Worker** (not Web Service — it must be a worker to stay alive 24/7)
-- Connect your GitHub repo
-
-### Step 4 — Configure
-- **Runtime:** Python
-- **Build Command:** `pip install -r requirements.txt`
-- **Start Command:** `python bot.py`
-- **Instance Type:** Free
-
-### Step 5 — Set environment variables
-- Add `TELEGRAM_TOKEN` = your bot token
-- Add `TELEGRAM_USER_ID` = your Telegram user ID
-
-### Step 6 — Deploy and verify
-Check logs — you should see:
-```
-Bot starting...
-Scheduler started.
-Bot is running.
-```
-Send `/help` to your bot in Telegram to confirm.
-
----
-
 ## Deploy on Old Laptop / Raspberry Pi (Recommended)
 
 Running on your own hardware avoids cloud IP blocks from Bybit.
