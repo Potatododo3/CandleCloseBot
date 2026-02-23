@@ -1,31 +1,32 @@
 # Crypto Candle Alert Bot
 
-Telegram bot that monitors Binance candle **closes** and sends alerts when the close price crosses a target. No API keys required.
+Telegram bot that monitors Bybit perpetual futures candle **closes** and sends alerts when the close price crosses your target. No API keys required.
 
 ## Features
 - Monitors candle close prices (not intra-candle live price)
 - Supports 15m, 1h, 4h, 1d timeframes with precise UTC alignment
-- Deduplicates alerts per candle — no spam
-- Binance public API — free, no key needed
+- Deduplicates alerts per candle — one alert per candle, no spam
+- Bybit public API — free, no key needed, perpetual futures
 - Single-user with hardcoded Telegram user ID
-- SQLite storage — coin registry persists across restarts
+- SQLite storage — rules and coin registry persist through restarts
 - Rule IDs reset to #1 when all rules are deleted
+- Search Bybit for exact symbol names from within the bot
 
 ## Project Structure
 ```
 bot.py           # Telegram bot, all command handlers, entry point
 config.py        # Configuration, constants, default coin list
 database.py      # SQLite: rules table + coins registry
-price_service.py # Binance klines fetch with retry logic
+price_service.py # Bybit klines fetch with retry logic
 scheduler.py     # Precise candle close timing + rule evaluation
 requirements.txt
-Procfile         # Railway worker process definition
+Procfile         # For cloud deployment (Railway/Render)
 .env.example     # Template for environment variables
 ```
 
 ---
 
-## Local Setup
+## Local Setup (Windows)
 
 ### 1. Install dependencies
 ```
@@ -39,7 +40,7 @@ Message `@BotFather` on Telegram → /newbot → follow prompts → copy the tok
 Message `@userinfobot` on Telegram → copy the ID number.
 
 ### 4. Create a .env file
-Copy `.env.example` to `.env` and fill in your values:
+Create a file called `.env` in your project folder:
 ```
 TELEGRAM_TOKEN=123456:ABCdef...
 TELEGRAM_USER_ID=987654321
@@ -47,66 +48,128 @@ TELEGRAM_USER_ID=987654321
 
 ### 5. Run
 ```
+cd D:\path\to\your\project
 python bot.py
 ```
 
+### 6. Auto-start on Windows boot (optional)
+Create a `start.bat` file in your project folder:
+```bat
+@echo off
+cd /d D:\path\to\your\project
+python bot.py
+pause
+```
+Then press `Win + R` → type `shell:startup` → drag a shortcut to `start.bat` into that folder.
+
 ---
 
-## Deploy to Railway (Free Tier)
+## Deploy to Render (Free Tier)
 
-Railway gives you $5 credit/month — more than enough to run a 24/7 bot.
-
-### Step 1 — Create account
-Sign up at https://railway.app using GitHub (free, no credit card required).
-
-### Step 2 — Install Git
-Download from https://git-scm.com/download/win and install. Then verify:
-```
-git --version
-```
-
-### Step 3 — Push code to GitHub
-In your project folder:
+### Step 1 — Push code to GitHub
+Install Git from https://git-scm.com/download/win, then:
 ```
 git init
 git add .
 git commit -m "initial commit"
-```
-Create a new private repo at https://github.com/new, then:
-```
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
 git branch -M main
 git push -u origin main
 ```
 
-### Step 4 — Create Railway project
-1. Go to https://railway.app/dashboard
-2. New Project → Deploy from GitHub repo
-3. Authorize Railway → select your repo → Deploy Now
+### Step 2 — Create Render account
+Sign up at https://render.com using GitHub.
+
+### Step 3 — Create a Background Worker
+- Dashboard → New → **Background Worker** (not Web Service — it must be a worker to stay alive 24/7)
+- Connect your GitHub repo
+
+### Step 4 — Configure
+- **Runtime:** Python
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `python bot.py`
+- **Instance Type:** Free
 
 ### Step 5 — Set environment variables
-In your Railway service → Variables tab → add:
-- `TELEGRAM_TOKEN` = your bot token
-- `TELEGRAM_USER_ID` = your Telegram user ID
+- Add `TELEGRAM_TOKEN` = your bot token
+- Add `TELEGRAM_USER_ID` = your Telegram user ID
 
-### Step 6 — Set start command
-Service → Settings → Start Command:
-```
-python bot.py
-```
-(Railway may detect the Procfile automatically — if so, skip this.)
-
-### Step 7 — Redeploy and verify
-Go to Deployments tab → Redeploy. Then check logs — you should see:
+### Step 6 — Deploy and verify
+Check logs — you should see:
 ```
 Bot starting...
 Scheduler started.
 Bot is running.
 ```
-Send `/help` to your bot in Telegram to confirm it's working.
+Send `/help` to your bot in Telegram to confirm.
 
-### Note on free tier
-Railway uses an ephemeral filesystem — `alerts.db` resets on every redeploy. Your **coin registry** and **rules** will be wiped when you push new code. Re-add your rules after each deploy. The default coins are re-seeded automatically.
+---
+
+## Deploy on Old Laptop / Raspberry Pi (Recommended)
+
+Running on your own hardware avoids cloud IP blocks from Bybit.
+
+### Recommended OS
+- **Ubuntu Server 24.04** — no desktop, ~200MB RAM idle, best for weak hardware
+- **Lubuntu 24.04** — if you occasionally want a GUI
+
+### Setup
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip git -y
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
+pip3 install -r requirements.txt --break-system-packages
+nano .env   # paste your TELEGRAM_TOKEN and TELEGRAM_USER_ID
+```
+
+### Run as a systemd service (auto-starts on boot, restarts on crash)
+```bash
+sudo nano /etc/systemd/system/cryptobot.service
+```
+Paste (replace YOUR_USERNAME and YOUR_REPO):
+```ini
+[Unit]
+Description=Crypto Candle Alert Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/YOUR_REPO
+ExecStart=python3 /home/YOUR_USERNAME/YOUR_REPO/bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+Then:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable cryptobot
+sudo systemctl start cryptobot
+```
+
+View logs:
+```bash
+journalctl -u cryptobot -f
+```
+
+### Power optimisations (laptop)
+```bash
+# Don't sleep on lid close
+sudo nano /etc/systemd/logind.conf
+# Set: HandleLidSwitch=ignore
+sudo systemctl restart systemd-logind
+
+# Disable Bluetooth
+sudo systemctl disable bluetooth --now
+
+# CPU powersave mode
+sudo apt install cpufrequtils -y
+sudo cpufreq-set -g powersave
+```
 
 ---
 
@@ -118,10 +181,13 @@ Railway uses an ephemeral filesystem — `alerts.db` resets on every redeploy. Y
 | `/watch ethereum 15m above 3500` | Alert when ETH 15m candle closes above $3,500 |
 | `/unwatch 3` | Remove rule with ID #3 |
 | `/list` | Show all active rules with next check time |
-| `/coins` | List all watchable coins and their Binance symbols |
-| `/addcoin ondo ONDOUSDT` | Add a new coin to the registry |
-| `/removecoin ondo` | Remove a coin from the registry |
-| `/help` | Show help message |
+| `/coins` | List all watchable coins and their Bybit symbols |
+| `/addcoin ta TAUSDT` | Add a new coin to the registry |
+| `/removecoin ta` | Remove a coin from the registry |
+| `/search TAU` | Search Bybit perpetuals for matching symbols |
+| `/reset` | Reset database to defaults (asks for confirmation) |
+| `/reset confirm` | Confirm reset — wipes all rules and custom coins |
+| `/help` | Show all commands and usage |
 
 ## Timeframes
 
@@ -132,25 +198,39 @@ Railway uses an ephemeral filesystem — `alerts.db` resets on every redeploy. Y
 | 4h | 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 |
 | 1d | 00:00 daily |
 
-Bot waits for close time + 5 seconds before fetching to ensure the candle is finalized on Binance.
+Bot waits close time + 5 seconds before fetching to ensure the candle is finalised on Bybit.
 
 ## Adding Coins
 
-The bot ships with 30 pre-loaded coins (bitcoin, ethereum, solana, etc.).
+The bot ships with 30 pre-loaded perpetual futures coins.
 
-To add any coin not in the list, find its Binance USDT trading pair symbol at binance.com, then:
+To find and add any coin:
 ```
-/addcoin ondo ONDOUSDT
-/watch ondo 1h above 1.50
+/search TAU
+/addcoin ta TAUSDT
+/watch ta 1h above 1.50
 ```
 
-The bot validates the symbol against Binance before saving it.
+The bot validates the symbol against Bybit's instruments API before saving.
 
-## Coin IDs vs Binance Symbols
+## What Persists Through Restarts
 
-You always use the **coin ID** (left side) in `/watch`, never the symbol directly:
+| Data | Persists? |
+|---|---|
+| Alert rules | ✅ Yes — stored in SQLite |
+| Coin registry | ✅ Yes — stored in SQLite |
+| Candle close schedule | ✅ Yes — recalculated from UTC on startup |
+| Missed candle alerts | ❌ No — bot only checks at close time |
+
+## Coin IDs vs Bybit Symbols
+
+You always use the **coin ID** (left side) in `/watch`:
 ```
 /watch bitcoin 4h below 60000    ✅
-/watch BTCUSDT 4h below 60000    ✅ (also works as passthrough)
-/watch BTC 4h below 60000        ❌ (use bitcoin or BTCUSDT)
+/watch BTCUSDT 4h below 60000    ✅ (direct symbol also works)
+/watch ta 1h above 1.50          ✅ (after /addcoin ta TAUSDT)
 ```
+
+## Notes on Cloud Hosting
+
+Bybit may block requests from known cloud datacenter IPs (Railway, Render, etc.) with a 403 error. If this happens, running on your own hardware (old laptop, Raspberry Pi) is the most reliable solution as home IPs are not blocked.
