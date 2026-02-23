@@ -27,8 +27,10 @@ Thumbs.db
 dist/
 build/
 out/
+start.bat
+alerts.db
 
 # Temporary
 *.tmp
 .cache/
-_pycache__/
+__pycache__/
