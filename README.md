@@ -20,7 +20,6 @@ database.py      # SQLite: rules table + coins registry
 price_service.py # Bybit klines fetch with retry logic
 scheduler.py     # Precise candle close timing + rule evaluation
 requirements.txt
-Procfile         # For cloud deployment (Railway/Render)
 .env.example     # Template for environment variables
 ```
 
