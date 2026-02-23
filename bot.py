@@ -276,6 +276,36 @@ async def cmd_removecoin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ---------------------------------------------------------------------------
+# /reset
+# ---------------------------------------------------------------------------
+
+@authorized_only
+async def cmd_reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    args = context.args
+    if not args or args[0] != "confirm":
+        rules = database.get_all_rules()
+        coins = database.get_all_coins()
+        await update.message.reply_text(
+            f"⚠️ <b>Reset database?</b>\n\n"
+            f"This will permanently delete:\n"
+            f"• All <b>{len(rules)}</b> active rules\n"
+            f"• All <b>{len(coins)}</b> coins (replaced with {len(__import__('config').DEFAULT_COINS)} defaults)\n\n"
+            f"To confirm, send:\n<code>/reset confirm</code>",
+            parse_mode="HTML",
+        )
+        return
+
+    database.reset_db()
+    await update.message.reply_text(
+        "✅ <b>Database reset.</b>\n\n"
+        "All rules deleted. Coin registry restored to defaults.\n"
+        "Rule IDs will start from #1 again.",
+        parse_mode="HTML",
+    )
+    logger.info("Database reset by user.")
+
+
+# ---------------------------------------------------------------------------
 # /search
 # ---------------------------------------------------------------------------
 
@@ -347,6 +377,8 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/removecoin <code>coin_id</code>\n"
         "/search <code>query</code>\n"
         "  Find exact Bybit symbol names\n"
+        "/reset\n"
+        "  Reset database to defaults (requires confirmation)\n"
         "  Remove a coin from the registry\n\n"
 
         "<b>Timeframes</b>\n"
@@ -388,6 +420,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("addcoin",     cmd_addcoin))
     app.add_handler(CommandHandler("removecoin",  cmd_removecoin))
     app.add_handler(CommandHandler("search",      cmd_search))
+    app.add_handler(CommandHandler("reset",       cmd_reset))
     app.add_handler(CommandHandler("help",        cmd_help))
     app.add_handler(CommandHandler("start",       cmd_help))
     return app

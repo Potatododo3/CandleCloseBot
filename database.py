@@ -123,3 +123,19 @@ def remove_coin(coin_id: str) -> bool:
         cursor = conn.execute("DELETE FROM coins WHERE id = ?", (coin_id.lower(),))
         conn.commit()
         return cursor.rowcount > 0
+
+
+def reset_db():
+    """
+    Wipe all rules and coins, reset autoincrement, then reseed default coins.
+    """
+    with get_connection() as conn:
+        conn.execute("DELETE FROM rules")
+        conn.execute("DELETE FROM coins")
+        conn.execute("DELETE FROM sqlite_sequence WHERE name = 'rules'")
+        conn.executemany(
+            "INSERT INTO coins (id, symbol) VALUES (?, ?)",
+            DEFAULT_COINS.items(),
+        )
+        conn.commit()
+    logger.info("Database reset to defaults.")
