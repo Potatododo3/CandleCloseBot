@@ -182,9 +182,9 @@ sudo cpufreq-set -g powersave
 | `/unwatch 3` | Remove rule with ID #3 |
 | `/list` | Show all active rules with next check time |
 | `/coins` | List all watchable coins and their Bybit symbols |
-| `/addcoin ta TAUSDT` | Add a new coin to the registry |
-| `/removecoin ta` | Remove a coin from the registry |
-| `/search TAU` | Search Bybit perpetuals for matching symbols |
+| `/addcoin btc BTCUSDT` | Add a new coin to the registry |
+| `/removecoin btc` | Remove a coin from the registry |
+| `/search BTC` | Search Bybit perpetuals for matching symbols |
 | `/reset` | Reset database to defaults (asks for confirmation) |
 | `/reset confirm` | Confirm reset — wipes all rules and custom coins |
 | `/help` | Show all commands and usage |
@@ -206,9 +206,9 @@ The bot ships with 30 pre-loaded perpetual futures coins.
 
 To find and add any coin:
 ```
-/search TAU
-/addcoin ta TAUSDT
-/watch ta 1h above 1.50
+/search BTC
+/addcoin btc BTCUSDT
+/watch btc 1h above 65000
 ```
 
 The bot validates the symbol against Bybit's instruments API before saving.
@@ -228,7 +228,7 @@ You always use the **coin ID** (left side) in `/watch`:
 ```
 /watch bitcoin 4h below 60000    ✅
 /watch BTCUSDT 4h below 60000    ✅ (direct symbol also works)
-/watch ta 1h above 1.50          ✅ (after /addcoin ta TAUSDT)
+/watch eth 1h above 2100         ✅ (after /addcoin eth ETHUSDT)
 ```
 
 ## Notes on Cloud Hosting
