@@ -375,11 +375,11 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/addcoin <code>coin_id SYMBOL</code>\n"
         "  Add a new coin to the registry\n"
         "/removecoin <code>coin_id</code>\n"
+        "  Remove a coin from the registry\n\n"
         "/search <code>query</code>\n"
         "  Find exact Bybit symbol names\n"
         "/reset\n"
         "  Reset database to defaults (requires confirmation)\n"
-        "  Remove a coin from the registry\n\n"
 
         "<b>Timeframes</b>\n"
         "15m · 1h · 4h · 1d\n\n"
